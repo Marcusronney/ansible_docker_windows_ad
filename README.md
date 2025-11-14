@@ -53,7 +53,18 @@ WORKDIR /ansible
 CMD ["bash"]
 ````
 
-![ls](imagens\ls.png)
+![ls](imagens/ls.png)
+
+````
+/
+├── Ansible
+│   ├── Dockerfile
+│   └── playbooks
+│   │   ├── create_vlan.yml 
+│   │   ├── ping_icmp.yml
+│   │   └──── inventory
+│   │        └──── host.ini
+````
 
 Buildando a imagem docker:
 ````
@@ -65,11 +76,11 @@ Subindo o container:
 docker run --rm -it   -v "$PWD":/ansible:Z   -v "$HOME/.ssh":/root/.ssh:ro,Z   -v /etc/krb5.conf:/etc/krb5.conf:ro,Z   -w /ansible   --name ansible   ansible:latest bash
 ````
 
-![ls](imagens\docker_run.png)
+![ls](imagens/docker_run.png)
 
 
 #docker ps
-![ls](imagens\docker_run.png)
+![ls](imagens/docker_run.png)
 
 
 Exportando "KRB5CCNAME=FILE:/tmp/krb5cc_$(id -u)" para força o Kerberos a usar um arquivo como cache:
