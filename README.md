@@ -72,7 +72,7 @@ docker build -t ansible:latest .
 ````
 
 Subindo o container:
-`````
+````
 docker run --rm -it   -v "$PWD":/ansible:Z   -v "$HOME/.ssh":/root/.ssh:ro,Z   -v /etc/krb5.conf:/etc/krb5.conf:ro,Z   -w /ansible   --name ansible   ansible:latest bash
 ````
 
