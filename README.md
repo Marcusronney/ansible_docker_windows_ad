@@ -21,7 +21,7 @@ sudo yum install docker
 sudo systemctl enable --now docker
 ````
 
-Imagem Docker: https://hub.docker.com/r/alexxit/go2rtc
+Imagem Docker: https://hub.docker.com/r/ansible/ansible
 
 
 
@@ -53,6 +53,8 @@ WORKDIR /ansible
 CMD ["bash"]
 ````
 
+![ls](imagens\ls.png)
+
 Buildando a imagem docker:
 ````
 docker build -t ansible:latest .
@@ -63,24 +65,35 @@ Subindo o container:
 docker run --rm -it   -v "$PWD":/ansible:Z   -v "$HOME/.ssh":/root/.ssh:ro,Z   -v /etc/krb5.conf:/etc/krb5.conf:ro,Z   -w /ansible   --name ansible   ansible:latest bash
 ````
 
+![ls](imagens\docker_run.png)
+
 
 #docker ps
-![Title](dockerps.png)
+![ls](imagens\docker_run.png)
 
 
-
+Exportando "KRB5CCNAME=FILE:/tmp/krb5cc_$(id -u)" para força o Kerberos a usar um arquivo como cache:
 ````
 export KRB5CCNAME=FILE:/tmp/krb5cc_$(id -u); mkdir -p /etc/krb5.conf.d
 ````
 
-````
-kdestroy || true
-````
-
+Criando um ticket para o Kerberos se autenticar no domínio:
 ````
 kinit usuario@dominio.local
 ````
 
+Testando conexão de um playbook para teste icmp, em --limit deixe o endereço do host que foi setado dentro de playbooks/host.ini.
 ````
 ansible -i playbooks/host.ini windows -m ansible.windows.win_ping --limit HOST.dominio.local
 ````
+
+Para testa a conexão, podemos criar uma regra de Firewall nos hosts windows
+
+````
+Set-NetFirewallRule -Name "WINRM-HTTP-In-TCP" -Enabled True -Action Allow -Profile Any
+Set-NetFirewallRule -Name "WINRM-HTTP-In-TCP" -RemoteAddress Any
+````
+
+
+# GPO
+
