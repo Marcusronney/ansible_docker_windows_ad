@@ -1,0 +1,1 @@
+ansible ... -m ansible.windows.win_service -a 'name="Spooler" state=restarted'

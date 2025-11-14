@@ -1,0 +1,36 @@
+---
+- name: Testar ICMP (ping) para um destino
+  hosts: all
+  gather_facts: yes   # usamos para detectar Windows vs Linux
+  vars:
+    target: 8.8.8.8           # mude aqui ou passe via --extra-vars "target=IP/hostname"
+    count: 4                  # número de pacotes
+    timeout_sec: 2            # timeout por pacote (Linux)
+    timeout_ms: 2000          # timeout por pacote (Windows)
+
+  tasks:
+    - name: Ping ICMP (Linux/Unix)
+      ansible.builtin.command: >
+        ping -c {{ count }} -W {{ timeout_sec }} {{ target }}
+      register: ping_out_linux
+      changed_when: false
+      failed_when: ping_out_linux.rc != 0
+      when: ansible_os_family != "Windows"
+
+    - name: Exibir resultado (Linux/Unix)
+      ansible.builtin.debug:
+        msg: "{{ ping_out_linux.stdout_lines | default([]) }}"
+      when: ansible_os_family != "Windows"
+
+    - name: Ping ICMP (Windows)
+      ansible.windows.win_shell: >
+        ping -n {{ count }} -w {{ timeout_ms }} {{ target }}
+      register: ping_out_win
+      changed_when: false
+      failed_when: ping_out_win.rc != 0
+      when: ansible_os_family == "Windows"
+
+    - name: Exibir resultado (Windows)
+      ansible.builtin.debug:
+        msg: "{{ ping_out_win.stdout_lines | default([]) }}"
+      when: ansible_os_family == "Windows"
