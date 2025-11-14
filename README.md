@@ -28,7 +28,7 @@ Imagem Docker: https://hub.docker.com/r/ansible/ansible
 ---------------------------
 
 
-#Docker
+# Docker
 
 Dockerfile
 ````
@@ -79,11 +79,27 @@ docker run --rm -it   -v "$PWD":/ansible:Z   -v "$HOME/.ssh":/root/.ssh:ro,Z   -
 ![ls](imagens/docker_run.png)
 
 
-#docker ps
-![ls](imagens/docker_run.png)
+docker ps
+![ls](imagens/docker_ps.png)
+
+ Define os hosts que o ansible irá se coenctar em *playbooks/inventory/host.ini*
+ ````
+[windows]
+host1.dominio.local
+host2.dominio.local
+host3.dominio.local
+
+[windows:vars]
+ansible_connection=winrm
+ansible_port=5985
+ansible_winrm_transport=kerberos
+ansible_user=usuario@DOMINIO.LOCAL
+ansible_winrm_server_cert_validation=ignore
+ ````
 
 
-Exportando "KRB5CCNAME=FILE:/tmp/krb5cc_$(id -u)" para força o Kerberos a usar um arquivo como cache:
+
+Exportando "*KRB5CCNAME=FILE:/tmp/krb5cc_$(id -u)*" para força o Kerberos a usar um arquivo como cache:
 ````
 export KRB5CCNAME=FILE:/tmp/krb5cc_$(id -u); mkdir -p /etc/krb5.conf.d
 ````
@@ -93,18 +109,44 @@ Criando um ticket para o Kerberos se autenticar no domínio:
 kinit usuario@dominio.local
 ````
 
+Visualise o ticket kerberos criado
+````
+klist
+````
+
 Testando conexão de um playbook para teste icmp, em --limit deixe o endereço do host que foi setado dentro de playbooks/host.ini.
 ````
 ansible -i playbooks/host.ini windows -m ansible.windows.win_ping --limit HOST.dominio.local
 ````
 
-Para testa a conexão, podemos criar uma regra de Firewall nos hosts windows
-
+Para testa a conexão sem GPO, podemos criar uma regra de Firewall nos hosts windows pelo powershell
 ````
 Set-NetFirewallRule -Name "WINRM-HTTP-In-TCP" -Enabled True -Action Allow -Profile Any
 Set-NetFirewallRule -Name "WINRM-HTTP-In-TCP" -RemoteAddress Any
+$rule = "Libera_port_ansible"     
+Enable-NetFirewallRule -Name $rule
+Set-NetFirewallRule -Name $rule -Action Allow -Enabled True -Profile Domain,Private
+Set-NetFirewallRule -Name $rule -RemoteAddress 192.168.0.40   # IP do host do Docker/Ansible
 ````
 
 
 # GPO
 
+
+Posso rodar um Curl para saber se a GPO abriu a porta 5985
+````
+curl -sI http://host1.dominio.local:5985/wsman || echo "Porta Fechada"
+````
+
+No powershell do host, atuelize as politicas.
+````
+gpupdate /force
+gpresult /r /SCOPE COMPUTER
+````
+
+Verificando se o serviço está rodando
+````
+Get-Service WinRM
+
+winrm enumerate winrm/config/listener
+````
